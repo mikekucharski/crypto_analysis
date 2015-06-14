@@ -3,6 +3,7 @@ import argparse
 import numpy
 import math
 import sys
+import random
 
 ALPHABET = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
 						"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
@@ -14,24 +15,16 @@ ALPHABET = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
 MOD_SIZE = len(ALPHABET)				
 
 def hill_cipher(msg, key, decrypt=False):
-	print "MSG: "; print msg
-	print "KEY: "; print key
-
 	if decrypt:
 		old_key = key
 		key = getInverse(key)
-		print "INV KEY: "; print key
-		print "KEY DIFF: "; print numpy.matrix.round(old_key*key) % MOD_SIZE
 
 	result = numpy.matrix.round(key * msg) % MOD_SIZE
-	print "RESULT: "; print result
 	return ''.join(ALPHABET[int(round(i) % MOD_SIZE)] for i in result.transpose().getA1())
 
 def getInverse(matrix):
 	det = round(numpy.linalg.det(matrix)) # already checked nonzero
 	adjoint = det*(matrix.getI())
-	print "ADJOINT: "; print adjoint
-	print "DET: "; print det
 
 	# xgcd algorithm only accepts positive inputs
 	# swap input order if det < 0
@@ -40,11 +33,7 @@ def getInverse(matrix):
 	else:
 		(k, v, invDet) = xgcd(MOD_SIZE, det)
 
-	print "MUL: "; print invDet
-	print invDet*adjoint
-	print (invDet*adjoint) % MOD_SIZE
-
-	return (invDet*adjoint) % MOD_SIZE
+	return numpy.matrix.round(invDet*adjoint) % MOD_SIZE
 
 # Extended Euclidean GCD Algorithm
 # INPUTS: a,b positive ints
@@ -81,7 +70,7 @@ def getKeyMatrix(key_string):
 	rowSize = math.sqrt(len(matVals))
 	mat = numpy.reshape(matVals, (rowSize,rowSize))
 
-	if numpy.linalg.det(mat).round() == 0:
+	if invalidKeyDet(mat):
 		safeExit("Zero determinant. Invalid key.")
 
 	return numpy.matrix(mat)
@@ -96,6 +85,18 @@ def getMsgMatrix(msg_string, numRows):
 
 	numCols = len(msgArray) / numRows
 	mat = numpy.reshape(msgArray, (numCols, numRows)).transpose()
+	return numpy.matrix(mat)
+
+def invalidKeyDet(key):
+	return numpy.linalg.det(key).round() % MOD_SIZE == 0
+
+def getRandomKeyMatrix(size):
+	totalSize = size*size
+	while True:
+		arr = [random.randint(0,MOD_SIZE-1) for x in range(totalSize)]
+		mat = numpy.reshape(arr, (size, size))
+		if not invalidKeyDet(mat):
+			break
 	return numpy.matrix(mat)
 
 def getAlphIndex(char):
