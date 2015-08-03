@@ -14,11 +14,17 @@ $encryptFlag = (filter_input(INPUT_GET, "encrypt", FILTER_VALIDATE_BOOLEAN)) ? "
 $command = escapeshellcmd("./run.py -c \"{$cipher}\" -m \"{$m}\" -k \"{$k}\" {$encryptFlag}");
 exec($command, $output, $return);
 
+if( count($output) > 0 ) {
+	$output = $output[0];
+} else {
+	$output = "";
+}
+
 $res = array(
 	'success' => $return==0, 
 	'method'  => $cipher, 
 	'output'  => $output
 );
-print json_encode($res);
 
+print json_encode($res);
 ?>

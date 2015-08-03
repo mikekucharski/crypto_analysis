@@ -1,11 +1,10 @@
-from mycrypto.break_util.ngram_score import ngram_score
-from mycrypto.vigenere.vigenere_cipher import vigenere_cipher
+from pyciph.break_util.ngram_score import ngram_score
+from pyciph.vigenere_cipher.vigenere import Vigenere
 from itertools import permutations
 import re
 
-qgram = ngram_score('mycrypto/break_util/english_quadgrams.txt')
-trigram = ngram_score('mycrypto/break_util/english_trigrams.txt')
-ctext = 'kiqpbkxspshwehospzqhoinlgapp'
+qgram = ngram_score('pyciph/break_util/english_quadgrams.txt')
+trigram = ngram_score('pyciph/break_util/english_trigrams.txt')
 ctext = 'Im wyeb kxfimo fpo imad amtvw mb neiv. Gmzbov ua msyqxk! Im wyeb kxfimo fpo imad amtvw mb neiv. Gmzbov ua msyqxk!'
 ctext = re.sub('[^A-Z]', '', ctext.upper())
 
@@ -38,7 +37,7 @@ for KLEN in xrange(3, 20): # for all keys 3-19
     for i in permutations('ABCDEFGHIJKLMNOPQRSTUVWXYZ',3): # 26P3 = 26*25*24 = 15600
         perm3 = ''.join(i)                     # concat the tuple of 3 chars to a string
         key =  perm3 + 'A'*(KLEN-len(perm3))   # A's will ensure we only decrypt snippits of ct 
-        pt = vigenere_cipher(ctext, key, decrypt=True)
+        pt = Vigenere(key).decrypt(ctext)
         
         # score the resulting plaintext snippets using trigram scoring
         score = 0
@@ -58,7 +57,7 @@ for KLEN in xrange(3, 20): # for all keys 3-19
             for c in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
                 key = rec[i][1] + c   # try adding single character c to key
                 paddedKey = key + 'A'*(KLEN-len(key))
-                pt = vigenere_cipher(ctext, paddedKey, decrypt=True)
+                pt = Vigenere(paddedKey).decrypt(ctext)
 
                 # score the resulting plaintext snippets using quadgram scoring
                 score = 0
@@ -73,16 +72,17 @@ for KLEN in xrange(3, 20): # for all keys 3-19
     #       Now we need to decrypt the FULL ct with each key and see which has the highest score
     ###########################################################################
     bestkey = rec[0][1]           # initialize best key and best score
-    pt = vigenere_cipher(ctext, bestkey, decrypt=True)
+    pt = Vigenere(bestkey).decrypt(ctext)
     bestscore = qgram.score(pt)
     for i in range(N):
-        pt = vigenere_cipher(ctext, rec[i][1], decrypt=True)
+        pt = Vigenere(rec[i][1]).decrypt(ctext)
         score = qgram.score(pt)  
         if score > bestscore:     # update best key and best score if necessary
             bestkey = rec[i][1]
             bestscore = score
 
     # Print the winning key for this key length
-    print "{0:.2f} klen: {1:2} key: \"{2}\" : {3}".format(bestscore, KLEN, bestkey, vigenere_cipher(ctext, bestkey, decrypt=True))
+    bestMsg = Vigenere(bestkey).decrypt(ctext)
+    print "{0:.2f} klen: {1:2} key: \"{2}\" : {3}".format(bestscore, KLEN, bestkey, bestMsg)
 
     

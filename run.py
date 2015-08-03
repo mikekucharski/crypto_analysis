@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import argparse
-from mycrypto.caesar import caesar_cipher as caesar
-from mycrypto.hill import hill_cipher as hill
-from mycrypto.vigenere import vigenere_cipher as vig
+from pyciph.caesar_cipher.caesar import Caesar
+from pyciph.vigenere_cipher.vigenere import Vigenere
+from pyciph.hill_cipher.hill import Hill
 
 def main():	
 	parser = argparse.ArgumentParser(description="A program for encrypting and decrypting files securely.")
@@ -10,18 +10,25 @@ def main():
 	parser.add_argument("type", choices=("encrypt", "decrypt"))
 	parser.add_argument("-m", "--message", help="The text to be encrypted/decrypted.")
 	parser.add_argument("-k", "--key", help="Key")
+
+	# Extract cmd line arguments
 	args = parser.parse_args()
 	decryptFlag = args.type == 'decrypt'
 	cipher = args.cipher
+	msg = args.message
+	key = args.key
 
 	if cipher == 'caesar':
-		print caesar.encrypt(args.message, int(args.key), decryptFlag)
+		key = int(key)
+		caesar = Caesar(key)
+		print caesar.decrypt(msg) if decryptFlag else caesar.encrypt(msg)
 	elif cipher == 'vigenere':
-		print vig.vigenere_cipher(args.message, args.key, decryptFlag)
+		vig = Vigenere(key)
+		print vig.decrypt(msg) if decryptFlag else vig.encrypt(msg)
 	elif cipher == 'hill':
-		key = hill.getKeyMatrix(args.key)
-		message = hill.getMsgMatrix(args.message.replace("\\", ""), len(key))
-		print hill.hill_cipher(message, key, decryptFlag)
+		hill = Hill(key)
+		msg = msg.replace("\\", "")
+		print hill.decrypt(msg) if decryptFlag else hill.encrypt(msg)
 
 if __name__ == "__main__":
 	main()
