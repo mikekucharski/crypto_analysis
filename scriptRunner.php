@@ -7,7 +7,7 @@ if (!isset($_GET['cipher']) || !isset($_GET['m'])
 }
 
 $cipher = $_GET['cipher'];
-$m = $_GET['m'];
+$m = rawurldecode($_GET['m']);
 $k = $_GET['k'];
 $encryptFlag = (filter_input(INPUT_GET, "encrypt", FILTER_VALIDATE_BOOLEAN)) ? "encrypt" : "decrypt";
 
@@ -15,7 +15,8 @@ $command = escapeshellcmd("./run.py -c \"{$cipher}\" -m \"{$m}\" -k \"{$k}\" {$e
 exec($command, $output, $return);
 
 if( count($output) > 0 ) {
-	$output = $output[0];
+	$output = str_replace("\\", "", $output[0]);
+	$output = rawurlencode($output);
 } else {
 	$output = "";
 }
